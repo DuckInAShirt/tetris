@@ -1,0 +1,36 @@
+
+# 忽略构建目录
+/build/
+
+# 忽略CMake生成的文件
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# 忽略clangd缓存
+.cache/
+
+# 忽略临时文件
+*.o
+*.obj
+*.exe
+*.out
+*.log
+*.tmp
+*~
+
+# 忽略VSCode等编辑器配置
+.vscode/
+.idea/
+
+# 可选：忽略macOS和Linux系统文件
+.DS_Store
+Thumbs.db
+
+# 保留源码和文档
+!src/
+!include/
+!*.c
+!*.h
+!README.md

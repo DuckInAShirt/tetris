@@ -1,4 +1,5 @@
 #include "tetris.h"
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -55,45 +56,120 @@ void generate_new_piece() {
     // 1. Pick a random shape index (0-6)
     int num = rand() % 7;
     // 2. Copy the shape and size from the global templates
-    Tetromino *current_piece = malloc(sizeof(Tetromino));
-    memcpy(current_piece->shape, TETROMINO_SHAPES[num], sizeof(current_piece->shape));
-    current_piece->size = TETROMINO_SIZES[num];
+    memcpy(current_piece.shape, TETROMINO_SHAPES[num], sizeof(current_piece.shape));
+    current_piece.size = TETROMINO_SIZES[num];
     // 3. Set initial position (top center)
-    current_piece-> x = COLS / 2 - current_piece->size / 2;
-    current_piece->y = 0;
+    current_piece.x = COLS / 2 - current_piece.size / 2;
+    current_piece.y = 0;
 }
 
 bool check_collision(Tetromino piece) {
     // TODO: Implement collision detection
     // Remember to check for 3 conditions:
     // 1. Out of left/right bounds
+    if (piece.x >= ROWS || piece.x < 0) {
+        return true;
+    }
     // 2. Out of bottom bound
+    if (piece.y >= COLS) {
+        return true;
+    }
     // 3. Overlapping with existing blocks in playfield
+    if (piece.y >= 0 && playfield[piece.x][piece.y] != 0) {
+        return true;
+    }
     return false; // Placeholder
 }
 
 void rotate_piece(Tetromino *piece) {
     // TODO: Implement rotation logic
     // Tip: Use a temporary 4x4 array. Transpose, then reverse rows.
+    int n = 4;
+    for (int i = 0; i < n / 2; i += 1) {
+        for (int j = 0; j < (n + 1) / 2; j += 1) {  
+            int t = piece->shape[i][j];
+            piece->shape[i][j] = piece->shape[j][n - 1 - i];
+            piece->shape[j][n - 1 - i] = piece->shape[n - 1 - i][n - 1 - j];
+            piece->shape[n - 1 - i][n - 1 - j] = piece->shape[n - 1 - j][i];
+            piece->shape[n - 1 - j][i] = t;
+        }
+    }
 }
 
 void handle_input() {
     // TODO: Implement input handling
     // 1. Get char with getch_nonblock()
+    char op = getch_nonblock();
     // 2. Create a temporary copy of current_piece
+    Tetromino copy = current_piece;
     // 3. Modify the copy based on input ('a', 'd', 's', 'w')
+    switch (op) {
+        case 'a':
+            copy.x--;
+            break;
+        case 'd':
+            copy.x++;
+            break;
+        case 's':
+            copy.y++;
+            break;
+        case 'w':
+            rotate_piece(&copy);
+            break;
+        default:
+            return;
+    }
     // 4. If the new position is valid (check_collision), update current_piece
+    if (!check_collision(copy)) {
+        current_piece = copy;
+    }
 }
 
 void lock_piece() {
     // TODO: "Bake" the current piece into the playfield
     // Iterate through the piece's shape and update the playfield grid
+    for (int i = 0; i < 4; i += 1) {
+        for (int j = 0; j < 4; j += 1) {
+            if (current_piece.shape[i][j] == 1) {
+                playfield[current_piece.x + i][current_piece.y + j] = 1;
+            }
+        }
+    }
 }
 
 void clear_lines() {
     // TODO: Check for and clear any full lines
     // 1. Iterate from bottom row to top
+    int cnt = 0;
+    int start = -1;
+    for (int i = ROWS - 1; i >= 0; i -= 1) {
+        bool flag = true;
+        for (int j = 0; j < COLS; j += 1) {
+            if (playfield[i][j] == 0) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag) {
+            start = i > start ? i : start; 
+            cnt++;
+        }
+    }
     // 2. If a line is full, increment score
+    switch (cnt) {
+        case 1:
+            score += 100;
+            break;
+        case 2:
+            score += 200;
+            break;
+        case 3:
+            score += 400;
+            break;
+        case 4:
+            score += 800;
+            break;
+    }
     // 3. Shift all rows above it down
 }
 
